@@ -17,6 +17,7 @@ exports.loginInput = [
 exports.businessRegisterInput = [
   { key: 'email', type: 'email', required: true },
   { key: 'full_name', type: 'string', required: true },
+  { key: 'phone', type: 'string', required: false },
   { key: 'password', type: 'string', required: true },
   { key: 'oauth_provider', type: 'string', required: false },
   { key: 'oauth_uid', type: 'string', required: false },

@@ -1,5 +1,5 @@
 // config/dbConnection.js
-require('dotenv').config({ path: process.env.ENV_PATH === 'development' ? 'env.local' : (process.env.ENV_PATH || '.env.local') });
+require('dotenv').config({ path: process.env.ENV_PATH || '.env' });
 const { Sequelize } = require('sequelize');
 const { supportedDbTypes } = require('../utils/staticData');
 
@@ -7,46 +7,24 @@ const { supportedDbTypes } = require('../utils/staticData');
 let sequelizeInstance = null;
 let modelsInstance = null;
 
-// Helper function to determine if SSL should be used
-const shouldUseSSL = () => {
-  // Use SSL for production or when connecting to remote hosts
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isRemoteHost = process.env.DB_HOST && 
-    !process.env.DB_HOST.includes('localhost') && 
-    !process.env.DB_HOST.includes('127.0.0.1');
-  
-  return isProduction || isRemoteHost;
-};
-
-// Get SSL configuration based on environment
-const getSSLConfig = () => {
-  if (shouldUseSSL()) {
-    return {
-      ssl: {
-        require: true, // Always require SSL for Neon
-        rejectUnauthorized: false, // Allow self-signed certificates
-      },
-      statement_timeout: 30000,
-      query_timeout: 30000,
-    };
-  }
-  return {
-    statement_timeout: 30000,
-    query_timeout: 30000,
-  };
-};
-
 const connectPostgres = async () => {
   const sequelize = new Sequelize(
-    process.env.DB_NAME || process.env.POSTGRES_DB,
-    process.env.DB_USERNAME || process.env.POSTGRES_USER,
-    process.env.DB_PASSWORD || process.env.POSTGRES_PASSWORD,
+    process.env.POSTGRES_DB,
+    process.env.POSTGRES_USER,
+    process.env.POSTGRES_PASSWORD,
     {
-      host: process.env.DB_HOST || process.env.POSTGRES_HOST,
-      port: process.env.DB_PORT || process.env.POSTGRES_PORT || 5432,
+      host: process.env.POSTGRES_HOST,
+      port: process.env.POSTGRES_PORT || 5432,
       dialect: 'postgres',
       logging: process.env.NODE_ENV === 'development' ? console.log : false,
-      dialectOptions: getSSLConfig(),
+      dialectOptions: {
+        ssl: process.env.NODE_ENV === 'production' ? {
+          require: true, // This will enforce using SSL
+          rejectUnauthorized: false, // This might be needed if self-signed certificates
+        } : false,
+        statement_timeout: 30000,
+        query_timeout: 30000,
+      },
       pool: {
         max: 5,
         min: 0,

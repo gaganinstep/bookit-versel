@@ -1,81 +1,70 @@
-require('dotenv').config({ path: process.env.ENV_PATH === 'development' ? 'env.local' : (process.env.ENV_PATH || '.env.local') });
+const { supportedDbTypes } = require('../utils/staticData');
 
-// Helper function to determine if SSL should be used
-const shouldUseSSL = () => {
-  // Use SSL for production or when connecting to remote hosts
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isRemoteHost = process.env.DB_HOST && 
-    !process.env.DB_HOST.includes('localhost') && 
-    !process.env.DB_HOST.includes('127.0.0.1');
-  
-  return isProduction || isRemoteHost;
-};
+require('dotenv').config({ path: process.env.ENV_PATH || '.env' });
 
-// Get SSL configuration based on environment
-const getSSLConfig = () => {
-  if (shouldUseSSL()) {
-    return {
-      ssl: {
+const getDConfig = () => {
+  const obj = {
+    username: '',
+    password: '',
+    database: '',
+    host: '',
+    port: 0,
+    dialect: '',
+  };
+  switch (process.env.DB_TYPE) {
+  case supportedDbTypes.postgres:
+    obj.username = process.env.POSTGRES_USER;
+    obj.password = process.env.POSTGRES_PASSWORD;
+    obj.database = process.env.POSTGRES_DB;
+    obj.host = process.env.POSTGRES_HOST;
+    obj.port = process.env.POSTGRES_PORT;
+    obj.dialect = process.env.POSTGRES_DIALECT;
+    obj.dialectOptions = {
+      ssl: process.env.NODE_ENV === 'production' ? {
         require: true,
-        rejectUnauthorized: false
-      }
+        rejectUnauthorized: false,
+      } : false,
+      statement_timeout: 30000,
+      query_timeout: 30000,
     };
+    obj.pool = {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    };
+    obj.logging = process.env.NODE_ENV === 'development' ? console.log : false;
+
+    return obj;
+  case supportedDbTypes.mysql:
+    obj.username = process.env.MYSQL_USER;
+    obj.password = process.env.MYSQL_PASSWORD;
+    obj.database = process.env.MYSQL_DB;
+    obj.host = process.env.MYSQL_HOST;
+    obj.port = process.env.MYSQL_PORT;
+    obj.dialect = process.env.MYSQL_DIALECT;
+    return obj;
+    case supportedDbTypes.mssql:
+      obj.username = process.env.MSSQL_USER;
+    obj.password = process.env.MSSQL_PASSWORD;
+    obj.database = process.env.MSSQL_DB;
+    obj.host = process.env.MSSQL_HOST;
+    obj.port = process.env.MSSQL_PORT;
+    obj.dialect = process.env.MSSQL_DIALECT;
+    obj.dialectOptions = {
+      options: {
+        encrypt: true,
+        trustServerCertificate: true,
+      },
+    };
+    return obj;
+  default:
+    throw new Error('Unsupported database type');
   }
-  return {}; // No SSL for local development
 };
 
 module.exports = {
-  development: {
-    username: process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
-    database: process.env.DB_NAME || 'bookit_dev',
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    dialect: 'postgres',
-    logging: console.log,
-    dialectOptions: getSSLConfig(),
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
-    }
-  },
-  production: {
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 5432,
-    dialect: 'postgres',
-    logging: false,
-    pool: {
-      max: 10,
-      min: 2,
-      acquire: 30000,
-      idle: 10000
-    },
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    }
-  },
-  test: {
-    username: process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
-    database: process.env.DB_NAME || 'bookit_test',
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    dialect: 'postgres',
-    logging: false,
-    dialectOptions: getSSLConfig(),
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
-    }
-  }
+  development: getDConfig(),
+  production: getDConfig(),
+  test: getDConfig(),
 };

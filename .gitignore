@@ -8,3 +8,4 @@ package-lock.json
 
 # config/config.js - needed for Vercel deployment
 # config/dbConnection.js
+.vercel

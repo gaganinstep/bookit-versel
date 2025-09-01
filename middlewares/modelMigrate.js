@@ -1,9 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-
-// Load environment variables before importing other modules
-require('dotenv').config({ path: path.join(__dirname, '../env.local') });
-
 const { Sequelize } = require('sequelize');
 const { connectDatabase } = require('../config/dbConnection');
 const logger = require('../config/logger');
@@ -11,7 +7,7 @@ const modules = require('../module.json');
 
 (async () => {
   try {
-    const sequelize = await connectDatabase(process.env.DB_TYPE || 'postgres');
+    const sequelize = await connectDatabase(process.env.DB_TYPE);
     const migrationFolders = [];
 
     modules.forEach((element) => {

@@ -1,26 +1,19 @@
 const express = require('express');
 const router = express.Router();
+const { connectDatabase } = require('../config/dbConnection');
+const { supportedDbTypes } = require('../utils/staticData');
 
-// Debug middleware for health routes
-router.use((req, res, next) => {
-  console.log(`[Health Routes] ${req.method} ${req.url}`);
-  next();
-});
-
-// Basic health check endpoint - completely isolated
-router.get('/', (req, res) => {
-  console.log('[Health] Basic health check accessed');
+// Basic health check endpoint
+router.get('/health', (req, res) => {
   try {
     res.status(200).json({ 
       status: 'ok',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
-      version: process.env.npm_package_version || '1.0.0',
-      message: 'Basic health check successful'
+      version: process.env.npm_package_version || '1.0.0'
     });
   } catch (error) {
-    console.error('[Health] Basic health check error:', error);
     res.status(500).json({ 
       status: 'error',
       message: 'Health check failed',
@@ -29,115 +22,115 @@ router.get('/', (req, res) => {
   }
 });
 
-// Database health check endpoint - isolated with minimal dependencies
-router.get('/db', async (req, res) => {
-  console.log('[Health] Database health check accessed');
+// Database health check endpoint
+router.get('/health/db', async (req, res) => {
   try {
-    // Check environment variables only
-    const dbType = process.env.DB_TYPE || 'unknown';
-    const hasHost = process.env.POSTGRES_HOST || process.env.MYSQL_HOST || process.env.MSSQL_HOST;
+    const startTime = Date.now();
+    const dbType = process.env.DB_TYPE || supportedDbTypes.postgres;
     
-    const dbStatus = {
-      configured: !!dbType && !!hasHost,
-      type: dbType,
-      host: hasHost ? 'configured' : 'not configured',
-      timestamp: new Date().toISOString()
-    };
-
+    // Test database connection
+    const sequelize = await connectDatabase(dbType);
+    
+    // Test a simple query to ensure database is responsive
+    const [results] = await sequelize.query('SELECT 1 as test');
+    
+    const responseTime = Date.now() - startTime;
+    
     res.status(200).json({
       status: 'ok',
-      database: dbStatus,
-      message: 'Database configuration check completed'
+      database: {
+        type: dbType,
+        connected: true,
+        responseTime: `${responseTime}ms`,
+        host: process.env.POSTGRES_HOST || process.env.MYSQL_HOST || process.env.MSSQL_HOST,
+        port: process.env.POSTGRES_PORT || process.env.MYSQL_PORT || process.env.MSSQL_PORT,
+        database: process.env.POSTGRES_DB || process.env.MYSQL_DB || process.env.MSSQL_DB,
+        testQuery: results[0]
+      },
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
     });
   } catch (error) {
-    console.error('[Health] Database health check error:', error);
-    res.status(200).json({
+    res.status(503).json({
       status: 'error',
       database: {
-        configured: false,
-        error: error.message
+        connected: false,
+        error: error.message,
+        type: process.env.DB_TYPE || 'unknown'
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
     });
   }
 });
 
-// Full health check endpoint - completely isolated
-router.get('/full', async (req, res) => {
-  console.log('[Health] Full health check accessed');
+// Comprehensive health check endpoint
+router.get('/health/full', async (req, res) => {
   try {
     const startTime = Date.now();
-    
-    // Basic system info
     const healthStatus = {
       status: 'ok',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
       version: process.env.npm_package_version || '1.0.0',
-      checks: {}
+      checks: {
+        database: { status: 'unknown', details: {} },
+        memory: { status: 'ok', details: {} },
+        disk: { status: 'ok', details: {} }
+      }
     };
 
-    // Memory check - isolated
+    // Database check
     try {
-      const memUsage = process.memoryUsage();
-      const memUsageMB = {
-        rss: Math.round(memUsage.rss / 1024 / 1024),
-        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
-        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
-        external: Math.round(memUsage.external / 1024 / 1024)
-      };
+      const dbStartTime = Date.now();
+      const dbType = process.env.DB_TYPE || supportedDbTypes.postgres;
+      const sequelize = await connectDatabase(dbType);
+      const [results] = await sequelize.query('SELECT 1 as test');
+      const dbResponseTime = Date.now() - dbStartTime;
       
-      healthStatus.checks.memory = {
-        status: 'ok',
-        details: memUsageMB
-      };
-
-      const heapUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
-      if (heapUsagePercent > 80) {
-        healthStatus.checks.memory.status = 'warning';
-        healthStatus.checks.memory.details.heapUsagePercent = Math.round(heapUsagePercent);
-      }
-    } catch (memError) {
-      healthStatus.checks.memory = {
-        status: 'error',
-        details: { error: 'Memory check failed' }
-      };
-    }
-
-    // Environment check
-    try {
-      healthStatus.checks.environment = {
+      healthStatus.checks.database = {
         status: 'ok',
         details: {
-          nodeVersion: process.version,
-          platform: process.platform,
-          arch: process.arch,
-          dbType: process.env.DB_TYPE || 'not set'
+          type: dbType,
+          connected: true,
+          responseTime: `${dbResponseTime}ms`,
+          host: process.env.POSTGRES_HOST || process.env.MYSQL_HOST || process.env.MSSQL_HOST,
+          port: process.env.POSTGRES_PORT || process.env.MYSQL_PORT || process.env.MSSQL_PORT,
+          database: process.env.POSTGRES_DB || process.env.MYSQL_DB || process.env.MSSQL_DB,
+          testQuery: results[0]
         }
       };
-    } catch (envError) {
-      healthStatus.checks.environment = {
+    } catch (dbError) {
+      healthStatus.checks.database = {
         status: 'error',
-        details: { error: 'Environment check failed' }
+        details: {
+          error: dbError.message,
+          type: process.env.DB_TYPE || 'unknown'
+        }
       };
+      healthStatus.status = 'degraded';
     }
 
-    // Process check
-    try {
-      healthStatus.checks.process = {
-        status: 'ok',
-        details: {
-          pid: process.pid,
-          memoryUsage: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
-          uptime: Math.round(process.uptime()) + 's'
-        }
-      };
-    } catch (procError) {
-      healthStatus.checks.process = {
-        status: 'error',
-        details: { error: 'Process check failed' }
-      };
+    // Memory check
+    const memUsage = process.memoryUsage();
+    const memUsageMB = {
+      rss: Math.round(memUsage.rss / 1024 / 1024),
+      heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+      heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+      external: Math.round(memUsage.external / 1024 / 1024)
+    };
+    
+    healthStatus.checks.memory = {
+      status: 'ok',
+      details: memUsageMB
+    };
+
+    // Check if memory usage is high (warning threshold: 80% of heap)
+    const heapUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+    if (heapUsagePercent > 80) {
+      healthStatus.checks.memory.status = 'warning';
+      healthStatus.checks.memory.details.heapUsagePercent = Math.round(heapUsagePercent);
     }
 
     const totalResponseTime = Date.now() - startTime;
@@ -148,20 +141,22 @@ router.get('/full', async (req, res) => {
     const hasWarnings = Object.values(healthStatus.checks).some(check => check.status === 'warning');
     
     if (hasErrors) {
-      healthStatus.status = 'degraded';
+      healthStatus.status = 'error';
+      res.status(503);
     } else if (hasWarnings) {
       healthStatus.status = 'warning';
+      res.status(200);
+    } else {
+      res.status(200);
     }
 
-    res.status(200).json(healthStatus);
+    res.json(healthStatus);
   } catch (error) {
-    console.error('[Health] Full health check error:', error);
-    // Even if everything fails, return a basic response
-    res.status(200).json({
+    res.status(500).json({
       status: 'error',
-      message: 'Health check encountered an error',
-      timestamp: new Date().toISOString(),
-      error: error.message
+      message: 'Health check failed',
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });
