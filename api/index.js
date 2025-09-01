@@ -26,7 +26,9 @@ app.get('/test', (req, res) => {
   res.json({ 
     status: 'ok',
     message: 'Vercel function is working',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'unknown',
+    vercel: !!process.env.VERCEL
   });
 });
 
@@ -36,6 +38,23 @@ app.get('/health', (req, res) => {
     status: 'ok',
     message: 'Health check from Vercel function',
     timestamp: new Date().toISOString()
+  });
+});
+
+// Status endpoint to check what's working
+app.get('/status', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Backend status check',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'unknown',
+    vercel: !!process.env.VERCEL,
+    apiVersion: process.env.API_VERSION || 'v1',
+    features: {
+      cors: true,
+      jsonParsing: true,
+      staticFiles: true
+    }
   });
 });
 
@@ -53,7 +72,8 @@ try {
       status: 'warning',
       message: 'Main app failed to load, but Vercel function is working',
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      note: 'Check Vercel logs for main app loading errors'
     });
   });
   
@@ -62,7 +82,7 @@ try {
       status: 'degraded',
       message: 'Health check from fallback route',
       timestamp: new Date().toISOString(),
-      note: 'Main app is not available'
+      note: 'Main app is not available - check logs for details'
     });
   });
 }
