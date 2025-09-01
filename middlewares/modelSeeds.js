@@ -1,6 +1,10 @@
 // seed.js
 const fs = require('fs');
 const path = require('path');
+
+// Load environment variables before importing other modules
+require('dotenv').config({ path: path.join(__dirname, '../env.local') });
+
 const { Sequelize } = require('sequelize');
 const { connectDatabase } = require('../config/dbConnection');
 const logger = require('../config/logger');

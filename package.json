@@ -13,10 +13,13 @@
     "db:seeds": "node ./middlewares/modelSeeds.js",
     "db:g:seed": "sequelize-cli seed:generate --name",
     "db:check": "node ./scripts/check-db.js",
+    "deploy:setup": "node ./scripts/deploy-setup.js",
     "generate-swagger": "node ./config/swagger.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "jest"
+    "test": "jest",
+    "db:local": "node ./scripts/switch-db-config.js local",
+    "db:remote": "node ./scripts/switch-db-config.js remote"
   },
   "author": "",
   "license": "ISC",

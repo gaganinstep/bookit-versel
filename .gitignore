@@ -6,5 +6,5 @@ node_modules/
 logs/*
 package-lock.json
 
-config/config.js
-config/dbConnection.js
+# config/config.js - needed for Vercel deployment
+# config/dbConnection.js

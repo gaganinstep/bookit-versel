@@ -3,8 +3,15 @@ const router = express.Router();
 const { connectDatabase } = require('../config/dbConnection');
 const { supportedDbTypes } = require('../utils/staticData');
 
+// Debug middleware for health routes
+router.use((req, res, next) => {
+  console.log(`[Health Routes] ${req.method} ${req.url}`);
+  next();
+});
+
 // Basic health check endpoint
-router.get('/health', (req, res) => {
+router.get('/', (req, res) => {
+  console.log('[Health] Basic health check accessed');
   try {
     res.status(200).json({ 
       status: 'ok',
@@ -23,7 +30,8 @@ router.get('/health', (req, res) => {
 });
 
 // Database health check endpoint
-router.get('/health/db', async (req, res) => {
+router.get('/db', async (req, res) => {
+  console.log('[Health] Database health check accessed');
   try {
     const startTime = Date.now();
     const dbType = process.env.DB_TYPE || supportedDbTypes.postgres;
@@ -51,6 +59,7 @@ router.get('/health/db', async (req, res) => {
       uptime: process.uptime()
     });
   } catch (error) {
+    console.log('[Health] Database health check failed:', error.message);
     res.status(503).json({
       status: 'error',
       database: {
@@ -65,7 +74,8 @@ router.get('/health/db', async (req, res) => {
 });
 
 // Comprehensive health check endpoint
-router.get('/health/full', async (req, res) => {
+router.get('/full', async (req, res) => {
+  console.log('[Health] Full health check accessed');
   try {
     const startTime = Date.now();
     const healthStatus = {

@@ -1,4 +1,4 @@
-require('dotenv').config({ path: process.env.ENV_PATH || '.env' });
+require('dotenv').config({ path: process.env.ENV_PATH === 'development' ? 'env.local' : (process.env.ENV_PATH || '.env.local') });
 
 const express = require('express');
 const logger = require('./config/logger');
@@ -56,6 +56,7 @@ process.on("unhandledRejection", (reason, promise) => {
 
 app.use((req, res, next) => {
   logger.info(`Incoming request: ${req.method} ${req.url}`);
+  console.log(`[Main App] ${req.method} ${req.url}`);
   res.on('finish', () => {
     logger.info(
       `Completed request: ${req.method} ${req.url} - Status: ${res.statusCode}`
@@ -69,7 +70,8 @@ app.get('/', (req, res) => {
   res.send('Hello, Node.js is running! - main updated');
 });
 
-app.use('/', healthRoutes);
+// Mount health routes after the root route to avoid conflicts
+app.use('/health', healthRoutes);
 
 // dynamicModuleLoader(app);
 
@@ -83,10 +85,12 @@ app.use(
 
 app.use(errorHandler);
 
-// Listen on all available network interfaces
-app.listen(port, '0.0.0.0', () => {
-  logger.info(`Server running on port ${port}`);
-  console.log(`Server running on port ${port}`);
-});
+// Only start the server if not running on Vercel
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(port, '0.0.0.0', () => {
+    logger.info(`Server running on port ${port}`);
+    console.log(`Server running on port ${port}`);
+  });
+}
 
 module.exports = app;
