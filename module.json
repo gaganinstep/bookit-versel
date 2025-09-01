@@ -1,0 +1,15 @@
+[
+    {"name": "role"}, 
+    {"name": "permission"}, 
+    {"name": "auth"},
+    {"name": "categories"},
+    {"name": "businesses"},
+    {"name": "services"},
+    {"name": "profile"},
+    {"name": "services"},
+    {"name": "schedules"},
+    {"name": "staffavailabilities"},
+    {"name": "appointments"},
+    {"name": "notifications"},
+    {"name": "photogallary"}
+]

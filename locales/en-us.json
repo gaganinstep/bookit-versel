@@ -1,0 +1,99 @@
+{
+  "auth": {
+    "registration_success": "Registration successful",
+    "email_exists": "Email already exists",
+    "phone_exists": "Phone already exists",
+    "invalid_role": "Invalid Role",
+    "invalid_email_password": "Invalid Email and Password",
+    "user_not_authenticated": "User not authenticated properly",
+    "email_required": "Email is required",
+    "password_required": "Password is required",
+    "invalid_token": "Invalid token",
+    "email_not_found": "No user found with this email address.",
+    "incorrect_password": "The password you entered is incorrect.",
+    "internal_error": "Something went wrong. Please try again later.",
+    "email_password_required": "Email and password are required.",
+    "login_success": "Login successful.",
+    "otp_verified": "OTP verified successfully.",
+    "email_otp_required": "Email and OTP are required.",
+    "invalid_otp": "The OTP provided is incorrect.",
+    "otp_expired": "The OTP has expired.",
+    "user_not_found": "No user found with the given email.",
+    "error_in_refresh_token": "Error in refreshing token",
+    "refresh_token_required": "Refresh token is required",
+    "refresh_token_invalid": "Refresh token is invalid",
+    "refresh_token_expired": "Refresh token has expired",
+    "social_login_success": "Social login successful",
+    "social_login_error": "Error during social login",
+    "email_exists_password_user": "This email is registered with password. Please login manually.",
+    "social_login_with_different_provider": "This email is already registered using {{provider}}. Please login with {{provider}}."
+  }, 
+  "general": {
+    "success": "Success",
+    "error": "Error",
+    "not_found": "Not Found",
+    "bad_request": "Bad Request",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "internal_server_error": "Internal Server Error",
+    "server_error": "Server Error",
+    "validation_error": "Validation Error",
+    "unknown_error": "Unknown Error"
+  },
+  "class": {
+    "created": "Class created successfully",
+    "created_with_schedule": "Class and schedules created successfully",
+    "updated": "Class updated successfully",
+    "updated_with_schedule": "Class and schedules updated successfully",
+    "deleted": "Class deleted successfully",
+    "cancelled": "Class cancelled successfully",
+    "not_found": "Class not found",
+    "found": "Class found successfully",
+    "found_with_schedules": "Class with schedules found successfully",
+    "listed": "Classes retrieved successfully",
+    "listed_with_schedules": "Classes with schedules retrieved successfully",
+    "schedule": {
+      "created": "Class schedule created successfully",
+      "updated": "Class schedule updated successfully",
+      "deleted": "Class schedule deleted successfully",
+      "not_found": "Class schedule not found",
+      "listed": "Class schedules retrieved successfully",
+      "ids_found": "Class schedule IDs retrieved successfully"
+    }
+  },
+  "staff": {
+    "created": "Staff member created successfully",
+    "updated": "Staff member updated successfully",
+    "deleted": "Staff member deleted successfully",
+    "not_found": "Staff member not found",
+    "listed": "Staff members retrieved successfully",
+    "schedule_created": "Staff schedule created successfully",
+    "schedule_updated": "Staff schedule updated successfully",
+    "schedule_not_found": "Staff schedule not found",
+    "comprehensive": {
+      "success": "Staff comprehensive data retrieved successfully"
+    }
+  },
+  "business": {
+    "business_not_found": "Business not found",
+    "business_created": "Business created successfully",
+    "business_updated": "Business updated successfully",
+    "business_deleted": "Business deleted successfully",
+    "business_exists": "Business already exists",
+    "business_name_required": "Business name is required",
+    "business_address_required": "Business address is required",
+    "business_data_step_required": "BusStep and data are required",
+    "services": {
+      "comprehensive": {
+        "success": "Comprehensive business services retrieved successfully"
+      }
+    },
+    "business_onboarding_step_invalid": "Invalid business data step",
+    "business_onboarding_step_completed": "Business onboarding summary retrieved successfully",
+    "location_required": "Location is required",
+    "location_not_found": "Location not found",
+    "location_created": "Location created successfully",
+    "location_should_be_array": "Location should be an array",
+    "service_should_be_array": "Service should be an array"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "auth": {
+    "registration_success": "تم التسجيل بنجاح",
+    "email_exists": "البريد الإلكتروني موجود بالفعل",
+    "phone_exists": "رقم الهاتف موجود بالفعل",
+    "internal_error": "خطأ في الخادم الداخلي",
+    "email_password_required": "البريد الإلكتروني وكلمة المرور مطلوبان",
+    "login_success": "تم تسجيل الدخول بنجاح",
+    "invalid_role": "دور غير صالح",
+    "invalid_email_password": "البريد الإلكتروني أو كلمة المرور غير صحيحة"
+  }
+}
+
