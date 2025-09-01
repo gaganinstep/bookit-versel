@@ -1,10 +1,6 @@
 // Vercel serverless function entry point
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-// Import the main app
-const mainApp = require('../index');
 
 // Create Express app
 const app = express();
@@ -17,15 +13,7 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(helmet());
 app.use(express.json());
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1000,
-});
-app.use(limiter);
 
 // Debug middleware for Vercel
 app.use((req, res, next) => {
@@ -33,8 +21,51 @@ app.use((req, res, next) => {
   next();
 });
 
-// Mount the main application at root to access all routes including health endpoints
-app.use('/', mainApp);
+// Test endpoint to verify basic functionality
+app.get('/test', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    message: 'Vercel function is working',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Basic health endpoint directly in Vercel function
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    message: 'Health check from Vercel function',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Try to mount the main application, but with error handling
+try {
+  const mainApp = require('../index');
+  console.log('[Vercel] Main app loaded successfully');
+  app.use('/', mainApp);
+} catch (error) {
+  console.error('[Vercel] Failed to load main app:', error.message);
+  
+  // Fallback routes if main app fails
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'warning',
+      message: 'Main app failed to load, but Vercel function is working',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  app.get('/health/full', (req, res) => {
+    res.json({
+      status: 'degraded',
+      message: 'Health check from fallback route',
+      timestamp: new Date().toISOString(),
+      note: 'Main app is not available'
+    });
+  });
+}
 
 // Export for Vercel
 module.exports = app;
