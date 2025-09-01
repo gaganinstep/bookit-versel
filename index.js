@@ -31,7 +31,7 @@ let logger, helmet, rateLimit, routes, fields, healthRoutes, errorHandler, swagg
 try {
   logger = require('./config/logger');
   console.log('[Main App] Logger loaded successfully');
-} catch (error) {
+} catch {
   console.log('[Main App] Logger not available, using console.log');
   logger = { info: console.log, error: console.error };
 }
@@ -40,7 +40,7 @@ try {
   helmet = require('helmet').default;
   app.use(helmet());
   console.log('[Main App] Helmet loaded successfully');
-} catch (error) {
+} catch {
   console.log('[Main App] Helmet not available, skipping security headers');
 }
 
@@ -52,7 +52,7 @@ try {
   });
   app.use(limiter);
   console.log('[Main App] Rate limiting loaded successfully');
-} catch (error) {
+} catch {
   console.log('[Main App] Rate limiting not available, skipping');
 }
 
@@ -60,7 +60,7 @@ try {
   i18n = require('./config/i18nConfig');
   app.use(i18n.init);
   console.log('[Main App] i18n loaded successfully');
-} catch (error) {
+} catch {
   console.log('[Main App] i18n not available, skipping internationalization');
 }
 
@@ -116,7 +116,7 @@ try {
   healthRoutes = require('./routes/health');
   app.use('/health', healthRoutes);
   console.log('[Main App] Health routes loaded successfully');
-} catch (error) {
+} catch {
   console.log('[Main App] Health routes not available, creating fallback');
   app.get('/health', (req, res) => {
     res.json({ 
@@ -132,15 +132,46 @@ try {
   const routesModule = require('./routes');
   routes = routesModule.routes;
   fields = routesModule.fields;
-  app.use(`/api/${apiVersion}`, routes);
-  console.log('[Main App] Main routes loaded successfully');
+  
+  console.log('[Main App] Routes module loaded:', !!routes);
+  console.log('[Main App] Fields loaded:', fields ? fields.length : 0);
+  
+  if (routes) {
+    app.use(`/api/${apiVersion}`, routes);
+    console.log(`[Main App] Main routes mounted at /api/${apiVersion} successfully`);
+    
+    // Add a test route to verify mounting
+    app.get(`/api/${apiVersion}/test`, (req, res) => {
+      res.json({
+        status: 'ok',
+        message: 'Main app routes are working',
+        timestamp: new Date().toISOString(),
+        apiVersion: apiVersion
+      });
+    });
+  } else {
+    throw new Error('Routes object is undefined');
+  }
 } catch (error) {
   console.log('[Main App] Main routes not available, creating fallback');
+  console.error('[Main App] Routes error:', error.message);
+  
   app.get(`/api/${apiVersion}`, (req, res) => {
     res.json({
       status: 'warning',
       message: 'Main routes not available',
+      error: error.message,
       timestamp: new Date().toISOString()
+    });
+  });
+  
+  // Add fallback for categories
+  app.get(`/api/${apiVersion}/categories`, (req, res) => {
+    res.json({
+      status: 'warning',
+      message: 'Categories endpoint from main app fallback',
+      timestamp: new Date().toISOString(),
+      note: 'Main routes failed to load'
     });
   });
 }
@@ -158,7 +189,7 @@ try {
     );
     console.log('[Main App] Swagger docs loaded successfully');
   }
-} catch (error) {
+} catch {
   console.log('[Main App] Swagger docs not available, skipping');
 }
 
@@ -167,9 +198,9 @@ try {
   errorHandler = require('./middlewares/errorHandler');
   app.use(errorHandler);
   console.log('[Main App] Error handler loaded successfully');
-} catch (error) {
+} catch {
   console.log('[Main App] Error handler not available, using basic error handling');
-  app.use((err, req, res, next) => {
+  app.use((err, req, res) => {
     console.error('Error:', err);
     res.status(500).json({
       status: 'error',

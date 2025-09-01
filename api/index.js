@@ -58,11 +58,40 @@ app.get('/status', (req, res) => {
   });
 });
 
+// Direct API test routes
+app.get('/api/v1', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'API v1 is accessible',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      categories: '/api/v1/categories',
+      businesses: '/api/v1/businesses',
+      services: '/api/v1/services',
+      auth: '/api/v1/auth'
+    }
+  });
+});
+
+// Direct categories test route
+app.get('/api/v1/categories', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Categories endpoint is working',
+    timestamp: new Date().toISOString(),
+    note: 'This is a direct route, not from the main app'
+  });
+});
+
 // Try to mount the main application, but with error handling
 try {
   const mainApp = require('../index');
   console.log('[Vercel] Main app loaded successfully');
+  
+  // Mount main app but don't override our direct routes
   app.use('/', mainApp);
+  
+  console.log('[Vercel] Main app mounted successfully');
 } catch (error) {
   console.error('[Vercel] Failed to load main app:', error.message);
   
